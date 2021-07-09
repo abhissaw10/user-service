@@ -2,24 +2,14 @@ package com.bmc.userservice.config;
 
 
 import com.bmc.userservice.model.User;
-import org.apache.kafka.clients.admin.AdminClientConfig;
-import org.apache.kafka.clients.producer.ProducerConfig;
-import org.apache.kafka.common.serialization.StringSerializer;
+import org.apache.kafka.clients.producer.KafkaProducer;
+import org.apache.kafka.clients.producer.Producer;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.kafka.core.DefaultKafkaProducerFactory;
-import org.springframework.kafka.core.KafkaAdmin;
-import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.kafka.core.ProducerFactory;
-import org.springframework.kafka.support.serializer.JsonSerializer;
-import springfox.documentation.builders.PathSelectors;
-import springfox.documentation.builders.RequestHandlerSelectors;
-import springfox.documentation.spi.DocumentationType;
-import springfox.documentation.spring.web.plugins.Docket;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.io.IOException;
+import java.util.Properties;
 
 @Configuration
 public class KafkaConfig {
@@ -27,27 +17,26 @@ public class KafkaConfig {
     @Value(value = "${kafka.bootstrap.address}")
     private String bootStrapAddress;
 
+    public Properties propsMap() throws IOException {
+        Properties properties = new Properties();
+        properties.put("bootstrap.servers", bootStrapAddress);
+        properties.put("acks", "all");
+        properties.put("retries", 0);
+        properties.put("linger.ms", 0);
+        properties.put("partitioner.class", "org.apache.kafka.clients.producer.internals.DefaultPartitioner");
+        properties.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+        properties.put("value.serializer", "org.springframework.kafka.support.serializer.JsonSerializer");
 
-    @Bean
-    public KafkaAdmin kafkaAdmin(){
-        Map<String,Object> configs = new HashMap<>();
-        configs.put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, bootStrapAddress);
-        return new KafkaAdmin(configs);
+        properties.put("request.timeout.ms", 30000);
+        properties.put("timeout.ms", 30000);
+        properties.put("max.in.flight.requests.per.connection", 5);
+        properties.put("retry.backoff.ms", 5);
+        return properties;
     }
 
     @Bean
-    public ProducerFactory<String, User> producerFactory(){
-        Map<String,Object> configProps = new HashMap<>();
-        configProps.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG,bootStrapAddress);
-        configProps.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
-        configProps.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
-        return new DefaultKafkaProducerFactory<>(configProps);
+    public Producer<String,User> kafkaProducer() throws IOException {
+        return new KafkaProducer<String, User>(propsMap());
     }
-
-    @Bean
-    public KafkaTemplate<String, User> kafkaTemplate(){
-        return new KafkaTemplate<String, User>(producerFactory());
-    }
-
 
 }
