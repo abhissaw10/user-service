@@ -8,6 +8,7 @@ import com.bmc.userservice.util.ValidationUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -20,6 +21,7 @@ public class UserService {
     public User register(User user) throws InvalidInputException {
         ValidationUtils.validate(user);
         user.setId(UUID.randomUUID().toString());
+        user.setCreatedDate(LocalDate.now().toString());
         userRepository.save(user);
         notify(user);
         return user;
