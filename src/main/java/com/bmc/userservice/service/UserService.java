@@ -22,14 +22,13 @@ import java.util.UUID;
 public class UserService {
     private final UserRepository userRepository;
     private final NotificationService notificationService;
-    private final SeSEmailVerification emailVerification;
     private final S3Repository s3Repository;
 
     public User register(User user) throws InvalidInputException {
         ValidationUtils.validate(user);
         user.setId(UUID.randomUUID().toString());
         user.setCreatedDate(LocalDate.now().toString());
-        emailVerification.sendVerificationEmail(user.getEmailId());
+
         userRepository.save(user);
         notify(user);
         return user;

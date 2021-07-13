@@ -13,6 +13,9 @@ import org.springframework.stereotype.Service;
 public class NotificationService {
 
     @Autowired
+    private SeSEmailVerification emailVerification;
+
+    @Autowired
     Producer<String,User> producer;
 
     @Value("${user.registration.notification}")
@@ -21,5 +24,6 @@ public class NotificationService {
     public void notifyUser(User user){
         log.info(user);
         producer.send(new ProducerRecord<>(userRegistrationTopic,null,user));
+        emailVerification.sendVerificationEmail(user.getEmailId());
     }
 }
